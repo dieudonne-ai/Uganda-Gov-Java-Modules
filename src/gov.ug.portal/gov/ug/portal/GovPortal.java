@@ -27,7 +27,24 @@ public class GovPortal {
             }
         }
 
+        System.out.println("\n[3] ACCESS CONTROL MATRIX (read at runtime from the module-info rules)");
+        String[] packages = {"gov.ug.nira.api", "gov.ug.nira.records", "gov.ug.nira.internal", "gov.ug.ura.internal"};
+        String[] clients = {"gov.ug.portal", "gov.ug.ura", "gov.ug.immigration", "gov.ug.ursb"};
+        for (String pkg : packages) {
+            Module owner = find(pkg.substring(0, pkg.indexOf('.', 7)));
+            StringBuilder row = new StringBuilder(String.format("    %-21s", pkg));
+            for (String client : clients) {
+                String rule = owner.isExported(pkg, find(client)) ? "ALLOWED" : "DENIED";
+                row.append(String.format("%-20s", client.substring(7) + ":" + rule));
+            }
+            System.out.println(row);
+        }
+
         System.out.println("\n=== All requests handled. Sensitive packages stayed protected. ===");
+    }
+
+    static Module find(String name) {
+        return ModuleLayer.boot().findModule(name).orElseThrow();
     }
 
 }
