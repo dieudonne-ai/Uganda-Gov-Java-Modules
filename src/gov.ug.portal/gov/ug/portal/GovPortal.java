@@ -1,6 +1,7 @@
 package gov.ug.portal;
 
 import gov.ug.core.api.GovService;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -40,6 +41,10 @@ public class GovPortal {
             System.out.println(row);
         }
 
+        System.out.println("\n[4] SECURITY TEST: the portal tries to call NIRA code directly");
+        tryAccess("gov.ug.nira.api.NiraService", "verify");
+        tryAccess("gov.ug.nira.records.CitizenRecord", "fetch");
+        tryAccess("gov.ug.nira.internal.NinRegistry", "lookup");
         System.out.println("\n=== All requests handled. Sensitive packages stayed protected. ===");
     }
 
@@ -47,4 +52,14 @@ public class GovPortal {
         return ModuleLayer.boot().findModule(name).orElseThrow();
     }
 
+    static void tryAccess(String className, String method) {
+        try {
+            Method m = Class.forName(className).getMethod(method, String.class);
+            System.out.println("    ALLOWED " + className + "." + method + "() -> " + m.invoke(null, "CM90012345ABCD"));
+        } catch (IllegalAccessException e) {
+            System.out.println("    BLOCKED " + className + "." + method + "() -> package not exported to gov.ug.portal");
+        } catch (Exception e) {
+            System.out.println("    ERROR " + e);
+        }
+    }
 }
